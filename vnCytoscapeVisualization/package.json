@@ -1,0 +1,23 @@
+{
+  "name": "virtualNetworkCIDR",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cytoscape": "^3.30.3",
+    "d3": "^7.9.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "fs": "0.0.1-security",
+    "graphlib": "^2.1.8",
+    "neo4j-driver": "^5.26.0",
+    "webcola": "^3.4.0"
+  }
+}

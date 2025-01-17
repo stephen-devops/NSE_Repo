@@ -1,0 +1,79 @@
+async function buildCIDRTreemap(supernet, cidrRanges) {
+    console.log('Supernet: ', supernet);
+    console.log('cidrRanges: ', cidrRanges);
+
+    const IPCIDR = await import('ip-cidr'); // Dynamic import for ES Module
+    const treemap = {
+        [supernet]: {
+            cidr: supernet,
+            children: []
+        }
+    };
+
+    // Helper function to check if one range is within another
+    function isInSubnet(child, parent) {
+        const parentCidr = new IPCIDR.default(parent);
+        const childCidr = new IPCIDR.default(child);
+
+        // Get the range of IPs for parent and child
+        const parentRange = parentCidr.toRange();
+        const childRange = childCidr.toRange();
+
+        const [parentStart, parentEnd] = parentRange.map(ip => ip2long(ip));
+        const [childStart, childEnd] = childRange.map(ip => ip2long(ip));
+
+        // Check if child range is within parent range
+        return childStart >= parentStart && childEnd <= parentEnd;
+    }
+
+    // Helper function to convert IP to long
+    function ip2long(ip) {
+        return ip.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet, 10), 0);
+    }
+
+    // Assigns a CIDR to its most specific parent
+    function assignToParent(cidr, possibleParents) {
+        // Sort parents by specificity (smallest prefix length first)
+        possibleParents.sort((a, b) => new IPCIDR.default(a).prefixLength - new IPCIDR.default(b).prefixLength);
+
+        for (const parent of possibleParents) {
+            if (cidr !== parent && isInSubnet(cidr, parent)) {
+                return parent; // Return the most specific parent
+            }
+        }
+        return null;
+    }
+
+    // Find the parent node in the treemap
+    function findParentNode(node, cidr) {
+        if (node.cidr === cidr) return node;
+        for (const child of node.children) {
+            const result = findParentNode(child, cidr);
+            if (result) return result;
+        }
+        return null;
+    }
+
+    // Process CIDR ranges in descending specificity
+    const processedRanges = [];
+    for (const cidr of cidrRanges) {
+        const parent = assignToParent(cidr, [supernet, ...processedRanges]);
+        if (parent) {
+            const parentNode = findParentNode(treemap[supernet], parent);
+            if (parentNode) {
+                parentNode.children.push({
+                    cidr,
+                    children: []
+                });
+            }
+        } else {
+            treemap[supernet].children.push({
+                cidr,
+                children: []
+            });
+        }
+        processedRanges.push(cidr);
+    }
+
+    return treemap;
+}

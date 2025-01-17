@@ -1,0 +1,61 @@
+async function buildCIDRTreemap(supernet, cidrRanges) {
+
+    console.log('Supernet: ', supernet);
+    console.log('cidrRanges: ', cidrRanges);
+
+    const IPCIDR = await import('ip-cidr'); // Dynamic import for ES Module
+    const treemap = {
+        [supernet]: {
+            cidr: supernet,
+            children: []
+        }
+    };
+
+    // Helper function to check if one range is within another
+    function isInSubnet(child, parent) {
+        const parentCidr = new IPCIDR.default(parent);
+        const childCidr = new IPCIDR.default(child);
+
+        // Get the range of IPs for parent and child
+        const parentRange = parentCidr.toRange();
+        const childRange = childCidr.toRange();
+
+        const [parentStart, parentEnd] = parentRange.map(ip => ip2long(ip));
+        const [childStart, childEnd] = childRange.map(ip => ip2long(ip));
+
+        // Check if child range is within parent range
+        return childStart >= parentStart && childEnd <= parentEnd;
+    }
+
+    // Helper function to convert IP to long
+    function ip2long(ip) {
+        return ip.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet, 10), 0);
+    }
+
+    // Recursive function to find and insert a node into the treemap
+    function insertIntoTree(node, cidr) {
+        for (const child of node.children) {
+            if (isInSubnet(cidr, child.cidr)) {
+                insertIntoTree(child, cidr);
+                return;
+            }
+        }
+        node.children.push({ cidr, children: [] });
+    }
+
+    // Process the CIDR ranges
+    const sortedRanges = [...cidrRanges].sort((a, b) => {
+        // Sort by prefix length (specificity), then lexicographically for stability
+        return new IPCIDR.default(a).prefixLength - new IPCIDR.default(b).prefixLength || a.localeCompare(b);
+    });
+
+    console.log("Sorted CIDR Ranges: ", sortedRanges);
+
+    for (const cidr of sortedRanges) {
+        if (isInSubnet(cidr, supernet)) {
+            insertIntoTree(treemap[supernet], cidr);
+        }
+    }
+
+    return treemap;
+}

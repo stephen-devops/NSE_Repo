@@ -1,0 +1,85 @@
+    	const myCustomTiling = (node, x0, y0, x1, y1) => {
+
+	    console.log('\nDepth 0 Custom tilling');
+	    console.log(`Processing node: ${node.data.cidr}, Depth: ${node.depth}`);
+
+    	    // Base case: Assign coordinates to the current node
+    	    if (!node.children || !node.children.length) {
+        	node.x0 = x0;
+        	node.y0 = y0;
+        	node.x1 = x1;
+        	node.y1 = y1;
+        	return;
+    	    }
+
+    	    // if (!node.parent) {
+            	// Root node spans the entire top row
+            //	node.x0 = x0;
+            //	node.y0 = 0;
+            //	node.x1 = x1;
+            //	node.y1 = rowHeight;
+    	    //}
+
+            const children = node.children || [];
+    	    // const totalWidth = d3.sum(children, d => (d && typeof d.value === "number" ? d.value : 1));
+	    const totalWidth = d3.sum(children, d => d.value || 1);
+	    const widthPerValue = (x1 - x0) / Math.max(totalWidth, 1);
+	    console.log(`Children of node ${node.data.cidr}:`, children);
+
+    	    let currentX = x0;
+
+	    console.log('Depth 0 Node children: ', children);
+
+    	    if (node.depth === 1) {
+
+	    	console.log(`Processing node: ${node.data.cidr}, Depth: ${node.depth}`);
+	    	console.log(`Processing depth 1: ${node.data.cidr}`);
+
+            	// Second row: Direct children of the root
+            	children.forEach(child => {
+            	    const childWidth = (child.value || 1) * widthPerValue;
+
+            	    child.x0 = currentX;
+             	    child.y0 = rowHeight;
+            	    child.x1 = currentX + childWidth;
+           	    child.y1 = rowHeight * 2;
+
+            	    // Recursive call for child
+            	    customTiling(child, child.x0, child.y0, child.x1, child.y1);
+
+            	    currentX += childWidth;
+            	});
+
+            	// Add placeholder for childless nodes
+            	if (children.length === 0) {
+            	    node.x0 = x0;
+            	    node.y0 = rowHeight;
+            	    node.x1 = x1;
+            	    node.y1 = rowHeight * 2;
+              	}
+
+    	    } else if (node.depth === 2) {
+
+	    	console.log(`Processing depth 2: ${node.data.cidr}`);
+
+            	// Third row: Children of the second row
+            	children.forEach(child => {
+            	    const childWidth = (child.value || 1) * widthPerValue;
+
+            	    child.x0 = currentX;
+            	    child.y0 = rowHeight * 2;
+            	    child.x1 = currentX + childWidth;
+            	    child.y1 = rowHeight * 3;
+
+            	    currentX += childWidth;
+            	});
+
+            	// Add placeholder for empty slots in the bottom row
+            	if (children.length === 0) {
+            	    node.x0 = x0;
+            	    node.y0 = rowHeight * 2;
+            	    node.x1 = x1;
+            	    node.y1 = rowHeight * 3;
+            	}
+    	    }
+    	};

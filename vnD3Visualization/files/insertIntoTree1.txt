@@ -1,0 +1,27 @@
+function insertIntoTree(node, cidr) {
+	console.log("\n\n Insert into Tree");
+	// Find the most specific parent for this CIDR among current children
+    	let mostSpecificParent = null;
+
+    	for (const child of node.children) {
+            if (isInSubnet(cidr, child.cidr)) {
+            	if (
+                    !mostSpecificParent ||
+                	new IPCIDR.default(child.cidr).prefixLength >
+                	new IPCIDR.default(mostSpecificParent.cidr).prefixLength
+            	) {
+                    mostSpecificParent = child;
+            	}
+            }
+    	}
+
+    	// If a specific parent is found, insert into that subtree
+    	if (mostSpecificParent) {
+	    console.log(`${mostSpecificParent} is the most specific parent to ${cidr}`);
+            insertIntoTree(mostSpecificParent, cidr);
+    	} else {
+            // Otherwise, add as a direct child
+	    console.log(`Adding the child ${cidr} directly to ${supernet}`);
+            node.children.push({ cidr, children: [] });
+    	}
+    }
