@@ -19,7 +19,7 @@ const driver = neo4j.driver(uri, neo4j.auth.basic(user, password));
 
 // Initialize Express.js
 const app = express();
-const port = 3000; // Port to run the web server
+const port = 3001; // Port to run the web server
 
 // Serve the static files (HTML, CSS, JS) from the public directory
 app.use(express.static(path.join(__dirname, 'public')));
@@ -212,6 +212,8 @@ async function buildCIDRTreemap(supernet, cidrDict) {
         },
     };
 
+    console.log('buildCIDRTreemap: ', supernet);
+
     // helper function to return all nested subnets under supernet
 
     const startSuffix = parseInt(supernet.split('/')[1], 10);
@@ -283,6 +285,8 @@ async function buildCIDRTreemap(supernet, cidrDict) {
     const { allSubnets, cidrSuffixes } = generateNestedSubnets(supernet, startSuffix, endSuffix);
 
     const newLabel = 'my_pool';
+
+    console.log('buildTreemap: ', cidrSuffixes);
 
     allSubnets.forEach(sub => {
 	if (!cidrDict.hasOwnProperty(sub)) {
@@ -519,7 +523,7 @@ module.exports = {
     getVirtualNetworkData
 };
 
-app.get('/api/fetch-data', async (req, res) => {
+app.get('/api/fetch-cidr-data', async (req, res) => {
     try {
         await fetchAndPopulateData();
         res.json({ message: 'Initial CDIR range fetched and virtual network saved.' });

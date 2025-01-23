@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Fetch the virtual network data
         let elements = await fetchVirtualNetworkData();
 
-        // Call initializeD3Visualization with the initial supernet
+        // Call the visualization with the initial supernet
         initializeD3Visualization(supernet, elements);
 
         // Add event listener to handle selection changes
@@ -215,6 +215,7 @@ async function initializeD3Visualization(supernet, data) {
     	};
 
     	// Call the recursive function to compute widths
+	console.log('computeWidths function: ', root);
     	computeWidths(root);
 
 	const customTiling = (node, x0, y0) => {
